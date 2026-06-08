@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Meal Dashboard | TribalStar Mycelium Symbiosis</title>
+  <meta name="description" content="Astronaut meal, hydration, and nutrition dashboard for TribalStar Mycelium Symbiosis.">
+  <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
+</head>
+<body data-page="dashboard">
+  <a class="skip-link" href="#weekly-schedule">Skip to schedule</a>
+
+  <header class="site-header">
+    <a class="brand-mark" href="index.html" aria-label="TribalStar Mycelium Symbiosis home">
+      <span class="brand-symbol" aria-hidden="true"></span>
+      <span>TribalStar</span>
+    </a>
+    <nav class="top-nav" aria-label="Primary navigation">
+      <a href="index.html">Profile</a>
+    </nav>
+  </header>
+
+  <main class="dashboard-shell">
+    <section class="panel profile-card" aria-labelledby="profile-card-title">
+      <div class="section-heading">
+        <p class="eyebrow">Crew identity</p>
+        <h1 id="profile-card-title">Astronaut profile</h1>
+      </div>
+      <div class="profile-summary" id="profile-summary"></div>
+    </section>
+
+    <section class="panel control-panel" aria-labelledby="mode-title">
+      <div class="section-heading">
+        <p class="eyebrow">Meal mode</p>
+        <h2 id="mode-title">Mission day type</h2>
+      </div>
+
+      <fieldset class="mode-selector" id="mode-selector">
+        <legend class="sr-only">Select meal mode</legend>
+        <label><input type="radio" name="mealMode" value="standard"> <span>Standard</span></label>
+        <label><input type="radio" name="mealMode" value="low"> <span>Low Activity</span></label>
+        <label><input type="radio" name="mealMode" value="high"> <span>High Activity</span></label>
+        <label><input type="radio" name="mealMode" value="eva"> <span>EVA</span></label>
+      </fieldset>
+    </section>
+
+    <section class="panel hydration-panel" aria-labelledby="hydration-title">
+      <div class="section-heading">
+        <p class="eyebrow">Hydration</p>
+        <h2 id="hydration-title">Water intake</h2>
+      </div>
+
+      <div class="hydration-meter" aria-live="polite">
+        <div class="meter-stats">
+          <span id="hydration-consumed">0 ml consumed</span>
+          <strong id="hydration-remaining">0 ml remaining</strong>
+        </div>
+        <div class="water-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="water-progress">
+          <span class="water-fill" id="water-fill"></span>
+        </div>
+        <p class="microcopy" id="hydration-target">Daily requirement: 0 ml</p>
+      </div>
+
+      <form class="hydration-form" id="hydration-form">
+        <label>
+          <span>Consumed water (ml)</span>
+          <input id="water-input" type="number" min="1" step="50" inputmode="numeric" required>
+        </label>
+        <button class="button primary" type="submit">Add water</button>
+        <button class="button secondary" type="button" id="reset-water">Reset</button>
+      </form>
+    </section>
+
+    <section class="panel future-panel" aria-labelledby="gender-title">
+      <div class="section-heading">
+        <p class="eyebrow">Expansion slot</p>
+        <h2 id="gender-title">Gender-adjusted calorie logic</h2>
+      </div>
+      <div class="future-slot" id="gender-calorie-slot">
+        <span>Adjustment status</span>
+        <strong>No adjustment active</strong>
+      </div>
+    </section>
+
+    <section class="panel future-panel" aria-labelledby="visual-title">
+      <div class="section-heading">
+        <p class="eyebrow">Food intelligence</p>
+        <h2 id="visual-title">3D food visuals and info cards</h2>
+      </div>
+      <div class="visual-reserve" data-future-module="food-3d-visuals"></div>
+      <div class="info-card-reserve" data-future-module="food-detail-cards"></div>
+    </section>
+
+    <section class="schedule-section" id="weekly-schedule" aria-labelledby="schedule-title">
+      <div class="schedule-heading">
+        <div>
+          <p class="eyebrow">Weekly nutrition</p>
+          <h2 id="schedule-title">Meal schedule</h2>
+        </div>
+        <p id="active-plan-title" class="active-plan-title"></p>
+      </div>
+      <div class="weekly-grid" id="weekly-grid"></div>
+    </section>
+  </main>
+</body>
+</html>
