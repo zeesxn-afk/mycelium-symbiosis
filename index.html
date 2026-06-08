@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TribalStar Mycelium Symbiosis</title>
+  <meta name="description" content="Astronaut profile access for the TribalStar Mycelium Symbiosis lunar-base meal-control system.">
+  <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
+</head>
+<body data-page="profile">
+  <a class="skip-link" href="#profile-form">Skip to profile form</a>
+
+  <header class="site-header">
+    <a class="brand-mark" href="index.html" aria-label="TribalStar Mycelium Symbiosis home">
+      <span class="brand-symbol" aria-hidden="true"></span>
+      <span>TribalStar</span>
+    </a>
+    <nav class="top-nav" aria-label="Primary navigation">
+      <a href="food.html">Dashboard</a>
+    </nav>
+  </header>
+
+  <main class="landing-shell">
+    <section class="hero-grid" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow">Lunar base nutrition control</p>
+        <h1 id="hero-title">TribalStar Mycelium Symbiosis</h1>
+        <p class="hero-lede">A mission-ready astronaut meal and hydration interface for sustained lunar operations.</p>
+      </div>
+
+      <aside class="mission-status" aria-label="System status">
+        <span class="status-light" aria-hidden="true"></span>
+        <div>
+          <p class="status-label">Habitat link</p>
+          <p class="status-value">Nutrition systems nominal</p>
+        </div>
+      </aside>
+    </section>
+
+    <section class="panel profile-panel" aria-labelledby="profile-title">
+      <div class="section-heading">
+        <p class="eyebrow">Astronaut access</p>
+        <h2 id="profile-title">Crew profile</h2>
+      </div>
+
+      <form id="profile-form" class="profile-form">
+        <div class="form-grid">
+          <label>
+            <span>Full name</span>
+            <input name="fullName" type="text" autocomplete="name" required>
+          </label>
+
+          <label>
+            <span>Gender</span>
+            <select name="gender" required>
+              <option value="">Select</option>
+              <option>Female</option>
+              <option>Male</option>
+              <option>Non-binary</option>
+              <option>Prefer not to say</option>
+            </select>
+          </label>
+
+          <label>
+            <span>Country</span>
+            <input name="country" type="text" autocomplete="country-name" required>
+          </label>
+
+          <label>
+            <span>Age</span>
+            <input name="age" type="number" min="16" max="90" inputmode="numeric" required>
+          </label>
+
+          <label>
+            <span>Weight (kg)</span>
+            <input name="weight" type="number" min="30" max="180" step="0.1" inputmode="decimal" required>
+          </label>
+
+          <label>
+            <span>Height (cm)</span>
+            <input name="height" type="number" min="120" max="230" step="0.1" inputmode="decimal" required>
+          </label>
+
+          <label>
+            <span>Mission role</span>
+            <select name="missionRole" required>
+              <option value="">Select</option>
+              <option>Commander</option>
+              <option>Pilot</option>
+              <option>Mission specialist</option>
+              <option>Flight engineer</option>
+              <option>Medical officer</option>
+              <option>Botany specialist</option>
+            </select>
+          </label>
+
+          <label>
+            <span>Crew ID</span>
+            <input name="crewId" type="text" autocomplete="off" placeholder="TS-01">
+          </label>
+
+          <label>
+            <span>Lunar habitat</span>
+            <input name="habitat" type="text" autocomplete="off" placeholder="Artemis Ridge">
+          </label>
+
+          <label>
+            <span>Shift cycle</span>
+            <select name="shiftCycle">
+              <option>Alpha</option>
+              <option>Beta</option>
+              <option>Gamma</option>
+              <option>Delta</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="form-actions">
+          <button class="button primary" type="submit">Save profile</button>
+          <a class="button secondary" href="food.html" id="continue-link">Continue</a>
+        </div>
+      </form>
+
+      <p class="saved-state" id="saved-profile-note" hidden>Saved profile ready for dashboard access.</p>
+    </section>
+  </main>
+</body>
+</html>
