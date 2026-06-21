@@ -3,7 +3,8 @@
 const STORAGE_KEYS = {
   profile: "tribalstar.profile.v1",
   hydration: "tribalstar.hydration.v1",
-  mode: "tribalstar.mode.v1"
+  mode: "tribalstar.mode.v1",
+  dailyPlan: "tribalstar.dailyplan.v1"
 };
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -16,6 +17,17 @@ const DAY_MEAL_NAMES = {
   Friday: ["Millet Porridge with Berries", "Pumpkin Seeds & Strawberries", "Tilapia with Sweet Potato", "Soy Yogurt", "Quinoa Bean Bowl"],
   Saturday: ["Cornmeal & Bean Cakes", "Mixed Nuts", "Three Sisters Stew", "Strawberry Smoothie", "Fish with Vegetable Stir Fry"],
   Sunday: ["Rice Cereal with Soy Milk", "Soy Yogurt with Berries", "Rice & Tofu Stir Fry", "Roasted Corn", "Three Sisters Feast"]
+};
+
+// Pre-calculated meal macros for standard meals by day
+const DAY_MEAL_MACROS = {
+  Monday: [[513, 22, 74, 12], [276, 8, 25, 15], [839, 44, 104, 24], [247, 3, 49, 2], [1039, 49, 132, 30]],
+  Tuesday: [[492, 20, 69, 11], [295, 10, 27, 14], [807, 39, 109, 20], [256, 5, 47, 3], [1098, 54, 137, 36]],
+  Wednesday: [[510, 21, 72, 12], [290, 9, 24, 16], [840, 42, 115, 22], [240, 4, 45, 2], [1106, 54, 140, 34]],
+  Thursday: [[530, 23, 75, 12], [270, 10, 22, 13], [830, 41, 108, 21], [250, 3, 50, 2], [1047, 50, 131, 36]],
+  Friday: [[507, 20, 71, 11], [284, 9, 25, 15], [872, 47, 106, 24], [264, 8, 30, 6], [1067, 48, 167, 32]],
+  Saturday: [[514, 22, 71, 13], [297, 10, 24, 16], [831, 42, 111, 22], [247, 5, 44, 3], [1072, 50, 142, 32]],
+  Sunday: [[499, 20, 70, 11], [289, 10, 26, 14], [819, 40, 110, 20], [239, 5, 48, 2], [1087, 52, 133, 37]]
 };
 
 const MEAL_PLAN_VALUES = {
@@ -124,14 +136,11 @@ document.addEventListener("DOMContentLoaded", () => {
 function initProfilePage() {
   const form = document.getElementById("profile-form");
   const savedNote = document.getElementById("saved-profile-note");
-  const continueLink = document.getElementById("continue-link");
   const profile = getProfile();
 
   if (profile) {
     fillProfileForm(form, profile);
     savedNote.hidden = false;
-    continueLink.classList.remove("secondary");
-    continueLink.classList.add("primary");
   }
 
   form.addEventListener("submit", (event) => {
@@ -148,12 +157,129 @@ function initProfilePage() {
       crewId: clean(formData.get("crewId")) || "Unassigned",
       habitat: clean(formData.get("habitat")) || "Lunar habitat",
       shiftCycle: clean(formData.get("shiftCycle")) || "Alpha",
+      activityLevel: clean(formData.get("activityLevel")),
+      dietaryRestrictions: clean(formData.get("dietaryRestrictions")),
+      fitnessCategory: clean(formData.get("fitnessCategory")),
+      dietaryNotes: clean(formData.get("dietaryNotes")),
       savedAt: new Date().toISOString()
     };
 
     saveJson(STORAGE_KEYS.profile, nextProfile);
+    
+    // Calculate and save personalized daily plan based on profile
+    const dailyPlan = calculatePersonalizedNutrition(nextProfile);
+    saveJson(STORAGE_KEYS.dailyPlan, dailyPlan);
+
     window.location.href = "food.html";
   });
+}
+
+/**
+ * Calculate personalized nutrition requirements based on profile
+ * Returns a daily plan with macro targets and suggested meals
+ */
+function calculatePersonalizedNutrition(profile) {
+  // Calculate BMR (Basal Metabolic Rate) using Harris-Benedict equation
+  let bmr;
+  const age = profile.age;
+  const weight = profile.weight;
+  const height = profile.height;
+  
+  if (profile.gender === "Male") {
+    bmr = 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age);
+  } else {
+    bmr = 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age);
+  }
+
+  // Activity multiplier based on activity level
+  const activityMultipliers = {
+    "sedentary": 1.2,
+    "low": 1.375,
+    "moderate": 1.55,
+    "high": 1.725,
+    "very-high": 1.9
+  };
+  
+  const activityMultiplier = activityMultipliers[profile.activityLevel] || 1.55;
+  const tdee = Math.round(bmr * activityMultiplier);
+
+  // Macro distribution: 30% protein, 45% carbs, 25% fat
+  const proteinCalories = tdee * 0.30;
+  const carbCalories = tdee * 0.45;
+  const fatCalories = tdee * 0.25;
+
+  // Convert to grams (protein: 4 cal/g, carbs: 4 cal/g, fat: 9 cal/g)
+  const protein = Math.round(proteinCalories / 4);
+  const carbs = Math.round(carbCalories / 4);
+  const fat = Math.round(fatCalories / 9);
+
+  // Scale the standard meal proportions to match calculated macros
+  const standardTotal = [2914, 126, 384, 83]; // calories, protein, carbs, fat from Monday standard plan
+  const scaleFactor = {
+    calories: tdee / standardTotal[0],
+    protein: protein / standardTotal[1],
+    carbs: carbs / standardTotal[2],
+    fat: fat / standardTotal[3]
+  };
+
+  // Use average scale factor for meal distribution
+  const avgScale = (scaleFactor.calories + scaleFactor.protein + scaleFactor.carbs + scaleFactor.fat) / 4;
+
+  // Generate scaled meals for today
+  const todayMealMacros = scaleMeals(DAY_MEAL_MACROS.Monday, avgScale);
+
+  return {
+    profile: {
+      name: profile.fullName,
+      gender: profile.gender,
+      age: profile.age,
+      weight: profile.weight,
+      height: profile.height
+    },
+    bmr: Math.round(bmr),
+    tdee: tdee,
+    activityLevel: profile.activityLevel,
+    macroTargets: {
+      calories: tdee,
+      protein: protein,
+      carbs: carbs,
+      fat: fat
+    },
+    meals: {
+      breakfast: generateMealFromMacros(todayMealMacros[0], "Three Sisters Porridge (Corn, Beans & Squash)"),
+      midSnack: generateMealFromMacros(todayMealMacros[1], "Strawberries & Almonds"),
+      lunch: generateMealFromMacros(todayMealMacros[2], "Rice-Fish-Azolla Bowl"),
+      eveningSnack: generateMealFromMacros(todayMealMacros[3], "Roasted Sweet Potato"),
+      dinner: generateMealFromMacros(todayMealMacros[4], "Tilapia with Quinoa & Greens")
+    },
+    generatedAt: new Date().toISOString()
+  };
+}
+
+/**
+ * Scale meal macros by a factor
+ */
+function scaleMeals(meals, factor) {
+  return meals.map(([cal, pro, carb, fat]) => [
+    Math.round(cal * factor),
+    Math.round(pro * factor),
+    Math.round(carb * factor),
+    Math.round(fat * factor)
+  ]);
+}
+
+/**
+ * Generate meal object from macro values
+ */
+function generateMealFromMacros(macros, name) {
+  const [calories, protein, carbs, fat] = macros;
+  return {
+    name: name,
+    calories: calories,
+    protein: protein,
+    carbs: carbs,
+    fat: fat
+  };
 }
 
 function initDashboardPage() {
@@ -166,10 +292,19 @@ function initDashboardPage() {
 
   renderProfile(profile);
 
-  // If a generated plan exists in localStorage, render it and skip the built-in mode selector.
-  const usedGenerated = renderGeneratedPlanIfAvailable(profile);
-  if (!usedGenerated) {
+  // Try to load and render personalized daily plan first
+  const dailyPlan = getDailyPlan();
+  if (dailyPlan) {
+    renderPersonalizedDailyPlan(dailyPlan);
+  } else {
+    // Fall back to mode selector if no daily plan exists
     initModeSelector(profile);
+  }
+
+  // If a generated plan exists in localStorage, render it
+  const usedGenerated = renderGeneratedPlanIfAvailable(profile);
+  if (!usedGenerated && !dailyPlan) {
+    // Already rendered by initModeSelector
   }
 
   initHydration(profile);
@@ -193,6 +328,67 @@ function initModeSelector(profile) {
   });
 
   renderMealSchedule(initialMode);
+}
+
+/**
+ * Render personalized daily nutrition plan across the weekly grid
+ */
+function renderPersonalizedDailyPlan(dailyPlan) {
+  const grid = document.getElementById("weekly-grid");
+  const title = document.getElementById("active-plan-title");
+  const modeSelector = document.getElementById("mode-selector");
+  
+  // Hide mode selector when showing personalized plan
+  if (modeSelector) {
+    modeSelector.parentElement.style.display = "none";
+  }
+
+  title.textContent = `Personalized Daily Plan • ${dailyPlan.macroTargets.calories} kcal`;
+  grid.innerHTML = "";
+
+  const totals = dailyPlan.macroTargets;
+  const meals = [
+    { type: "Breakfast", data: dailyPlan.meals.breakfast },
+    { type: "Mid-morning snack", data: dailyPlan.meals.midSnack },
+    { type: "Lunch", data: dailyPlan.meals.lunch },
+    { type: "Evening snack", data: dailyPlan.meals.eveningSnack },
+    { type: "Dinner", data: dailyPlan.meals.dinner }
+  ];
+
+  // Display as single day spanning full width with beautiful design
+  DAYS.forEach((day) => {
+    const column = document.createElement("article");
+    column.className = "day-column personalized";
+    column.setAttribute("aria-label", `${day} personalized daily plan`);
+
+    const heading = document.createElement("div");
+    heading.className = "day-heading";
+    heading.innerHTML = `<h3>${day}</h3><span class="total-pill">${totals.calories} kcal</span>`;
+
+    const totalRow = document.createElement("div");
+    totalRow.className = "total-row";
+    totalRow.innerHTML = `<span>${totals.protein}g protein</span><span>${totals.carbs}g carbs</span><span>${totals.fat}g fat</span>`;
+
+    column.append(heading, totalRow);
+
+    meals.forEach(({ type, data }) => {
+      const block = document.createElement("section");
+      block.className = "meal-block";
+      block.innerHTML = `
+        <p class="meal-type">${type}</p>
+        <h4 class="meal-name">${escapeHtml(data.name)}</h4>
+        <div class="macro-grid">
+          <div class="macro"><span>Calories</span><strong>${data.calories} kcal</strong></div>
+          <div class="macro"><span>Protein</span><strong>${data.protein}g</strong></div>
+          <div class="macro"><span>Carbs</span><strong>${data.carbs}g</strong></div>
+          <div class="macro"><span>Fat</span><strong>${data.fat}g</strong></div>
+        </div>
+      `;
+      column.appendChild(block);
+    });
+
+    grid.appendChild(column);
+  });
 }
 
 function renderProfile(profile) {
@@ -468,6 +664,10 @@ function fillProfileForm(form, profile) {
 
 function getProfile() {
   return readJson(STORAGE_KEYS.profile);
+}
+
+function getDailyPlan() {
+  return readJson(STORAGE_KEYS.dailyPlan);
 }
 
 function getHydration() {
