@@ -295,7 +295,7 @@ function initDashboardPage() {
   // Try to load and render personalized daily plan first
   const dailyPlan = getDailyPlan();
   if (dailyPlan) {
-    renderPersonalizedDailyPlan(dailyPlan);
+    renderPersonalizedDailyPlan(dailyPlan, profile);
   } else {
     // Fall back to mode selector if no daily plan exists
     initModeSelector(profile);
@@ -331,20 +331,17 @@ function initModeSelector(profile) {
 }
 
 /**
- * Render personalized daily nutrition plan across the weekly grid
+ * Render personalized daily nutrition plan with micronutrient info
  */
-function renderPersonalizedDailyPlan(dailyPlan) {
-  const grid = document.getElementById("weekly-grid");
-  const title = document.getElementById("active-plan-title");
-  const modeSelector = document.getElementById("mode-selector");
-  
-  // Hide mode selector when showing personalized plan
-  if (modeSelector) {
-    modeSelector.parentElement.style.display = "none";
-  }
+function renderPersonalizedDailyPlan(dailyPlan, profile) {
+  const dayMealsContainer = document.getElementById("day-meals");
+  const dayTotalsContainer = document.querySelector(".day-total");
+  const keyMicrosContainer = document.getElementById("key-micros");
 
-  title.textContent = `Personalized Daily Plan • ${dailyPlan.macroTargets.calories} kcal`;
-  grid.innerHTML = "";
+  if (!dayMealsContainer || !dayTotalsContainer) return;
+
+  dayMealsContainer.innerHTML = "";
+  keyMicrosContainer.innerHTML = "";
 
   const totals = dailyPlan.macroTargets;
   const meals = [
@@ -355,40 +352,113 @@ function renderPersonalizedDailyPlan(dailyPlan) {
     { type: "Dinner", data: dailyPlan.meals.dinner }
   ];
 
-  // Display as single day spanning full width with beautiful design
-  DAYS.forEach((day) => {
-    const column = document.createElement("article");
-    column.className = "day-column personalized";
-    column.setAttribute("aria-label", `${day} personalized daily plan`);
+  // Update day totals
+  document.getElementById("totals-calories").textContent = totals.calories + " kcal";
+  document.getElementById("totals-protein").textContent = totals.protein + "g";
+  document.getElementById("totals-carbs").textContent = totals.carbs + "g";
 
-    const heading = document.createElement("div");
-    heading.className = "day-heading";
-    heading.innerHTML = `<h3>${day}</h3><span class="total-pill">${totals.calories} kcal</span>`;
-
-    const totalRow = document.createElement("div");
-    totalRow.className = "total-row";
-    totalRow.innerHTML = `<span>${totals.protein}g protein</span><span>${totals.carbs}g carbs</span><span>${totals.fat}g fat</span>`;
-
-    column.append(heading, totalRow);
-
-    meals.forEach(({ type, data }) => {
-      const block = document.createElement("section");
-      block.className = "meal-block";
-      block.innerHTML = `
-        <p class="meal-type">${type}</p>
-        <h4 class="meal-name">${escapeHtml(data.name)}</h4>
-        <div class="macro-grid">
-          <div class="macro"><span>Calories</span><strong>${data.calories} kcal</strong></div>
-          <div class="macro"><span>Protein</span><strong>${data.protein}g</strong></div>
-          <div class="macro"><span>Carbs</span><strong>${data.carbs}g</strong></div>
-          <div class="macro"><span>Fat</span><strong>${data.fat}g</strong></div>
-        </div>
-      `;
-      column.appendChild(block);
-    });
-
-    grid.appendChild(column);
+  // Render each meal item
+  meals.forEach(({ type, data }) => {
+    const mealItem = document.createElement("div");
+    mealItem.className = "day-meal-item";
+    
+    const microBadges = renderMicronutrientBadges(data.name);
+    
+    mealItem.innerHTML = `
+      <p class="meal-type">${type}</p>
+      <h4 class="meal-name">${escapeHtml(data.name)}</h4>
+      <div class="macro-grid">
+        <div class="macro"><span>Calories</span><strong>${data.calories} kcal</strong></div>
+        <div class="macro"><span>Protein</span><strong>${data.protein}g</strong></div>
+        <div class="macro"><span>Carbs</span><strong>${data.carbs}g</strong></div>
+        <div class="macro"><span>Fat</span><strong>${data.fat}g</strong></div>
+      </div>
+      ${microBadges}
+    `;
+    dayMealsContainer.appendChild(mealItem);
   });
+
+  // Render key micronutrients at top
+  renderKeyMicronutrients(meals, profile, keyMicrosContainer);
+}
+
+/**
+ * Render micronutrient badges for a meal
+ */
+function renderMicronutrientBadges(mealName) {
+  const microData = getMicronutrientData(mealName);
+  if (!microData || Object.keys(microData).length === 0) return "";
+
+  const topMicros = [
+    { key: "calcium", icon: "🥛" },
+    { key: "iron", icon: "🩸" },
+    { key: "vitaminC", icon: "🍊" },
+    { key: "zinc", icon: "⚡" }
+  ];
+
+  const badges = topMicros
+    .filter(m => microData[m.key])
+    .map(m => `
+      <div class="micro-badge">
+        <span class="micro-badge-icon">${m.icon}</span>
+        <span class="micro-badge-value">${Math.round(microData[m.key])}</span>
+        <span class="micro-badge-unit">${getUnitForMicronutrient(m.key)}</span>
+      </div>
+    `)
+    .join("");
+
+  return badges ? `<div class="micronutrient-badges">${badges}</div>` : "";
+}
+
+/**
+ * Get micronutrient data (stub - would import from micronutrient-data.js)
+ */
+function getMicronutrientData(mealName) {
+  // This would normally import from micronutrient-data.js
+  // For now, return empty object
+  return {};
+}
+
+/**
+ * Get unit for micronutrient
+ */
+function getUnitForMicronutrient(key) {
+  const units = {
+    calcium: "mg",
+    iron: "mg",
+    zinc: "mg",
+    vitaminA: "mcg",
+    vitaminC: "mg",
+    vitaminD: "mcg",
+    vitaminB12: "mcg",
+    folate: "mcg",
+    magnesium: "mg",
+    potassium: "mg"
+  };
+  return units[key] || "";
+}
+
+/**
+ * Render key micronutrients in the header
+ */
+function renderKeyMicronutrients(meals, profile, container) {
+  if (!container) return;
+
+  const keyMicros = [
+    { key: "calcium", icon: "🥛", label: "Calcium" },
+    { key: "iron", icon: "🩸", label: "Iron" },
+    { key: "vitaminC", icon: "🍊", label: "Vitamin C" }
+  ];
+
+  const html = keyMicros.map(m => `
+    <div class="key-micro-item">
+      <div class="key-micro-icon">${m.icon}</div>
+      <div class="key-micro-value">—</div>
+      <div class="key-micro-label">${m.label}</div>
+    </div>
+  `).join("");
+
+  container.innerHTML = html;
 }
 
 function renderProfile(profile) {
