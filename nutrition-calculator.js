@@ -42,7 +42,24 @@ function handleFormSubmit(event) {
   };
 
   const results = calculateNutritionRequirements(profile);
+
+  // Generate a meal plan that uses the calculated targets
+  let plan = null;
+  try {
+    if (typeof getMealRecommendations === 'function') {
+      plan = getMealRecommendations(profile, results);
+      // persist plan so dashboard can pick it up
+      localStorage.setItem('tribalstar.mealplan.v1', JSON.stringify(plan));
+    }
+  } catch (err) {
+    console.error('Meal plan generation failed', err);
+  }
+
   displayResults(profile, results);
+
+  // display the meal plan immediately below the results (if available)
+  displayMealPlan(plan);
+
   saveResults(profile, results);
 }
 
@@ -384,6 +401,62 @@ function saveResults(profile, results) {
     savedAt: new Date().toISOString()
   };
   localStorage.setItem(NUTRITION_STORAGE_KEY, JSON.stringify(saved));
+}
+
+function displayMealPlan(plan) {
+  const resultsSection = document.getElementById("results-section");
+  let container = document.getElementById("meal-plan-section");
+  if (!container) {
+    container = document.createElement("section");
+    container.id = "meal-plan-section";
+    container.className = "meal-plan-section";
+    container.innerHTML = `
+      <h3>Suggested Daily Meal Plan</h3>
+      <div id="meal-plan-content" class="meal-plan-content"></div>
+    `;
+    resultsSection.appendChild(container);
+  }
+
+  const content = document.getElementById("meal-plan-content");
+  if (!plan) {
+    content.innerHTML = "<p>No meal plan available.</p>";
+    return;
+  }
+
+  function renderList(list) {
+    if (!list || list.length === 0) return "<em>None</em>";
+    return `<ul>${list.map(i => `<li>${i.name} — ${i.calories} kcal · ${i.protein}g P · ${i.carbs}g C · ${i.fat}g F</li>`).join("")}</ul>`;
+  }
+
+  content.innerHTML = `
+    <div class="plan-grid">
+      <div class="plan-meal">
+        <h4>Breakfast</h4>
+        ${renderList(plan.breakfast)}
+      </div>
+      <div class="plan-meal">
+        <h4>Lunch</h4>
+        ${renderList(plan.lunch)}
+      </div>
+      <div class="plan-meal">
+        <h4>Dinner</h4>
+        ${renderList(plan.dinner)}
+      </div>
+      <div class="plan-meal">
+        <h4>Snacks</h4>
+        ${renderList(plan.snacks)}
+      </div>
+    </div>
+
+    <div class="plan-totals">
+      <strong>Totals:</strong>
+      <div>Calories: ${plan.totals.calories} kcal</div>
+      <div>Protein: ${plan.totals.protein} g</div>
+      <div>Carbs: ${plan.totals.carbs} g</div>
+      <div>Fat: ${plan.totals.fat} g</div>
+      <div>Fiber: ${plan.totals.fiber} g</div>
+    </div>
+  `;
 }
 
 function downloadReport(profile, results) {
