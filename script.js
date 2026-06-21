@@ -165,7 +165,13 @@ function initDashboardPage() {
   }
 
   renderProfile(profile);
-  initModeSelector(profile);
+
+  // If a generated plan exists in localStorage, render it and skip the built-in mode selector.
+  const usedGenerated = renderGeneratedPlanIfAvailable(profile);
+  if (!usedGenerated) {
+    initModeSelector(profile);
+  }
+
   initHydration(profile);
   renderGenderSlot(profile);
 }
@@ -262,6 +268,123 @@ function renderMealSchedule(modeKey) {
   });
 }
 
+// New: attempt to load a generated plan from localStorage and render it.
+// Returns true if a generated plan was rendered.
+function renderGeneratedPlanIfAvailable(profile) {
+  try {
+    const raw = localStorage.getItem('tribalstar.mealplan.v1');
+    if (!raw) return false;
+    const plan = JSON.parse(raw);
+    if (!plan || !plan.totals || typeof plan.totals.calories === 'undefined') {
+      // Plan format unexpected — fall back.
+      return false;
+    }
+    renderGeneratedWeeklyGrid(plan);
+    return true;
+  } catch (err) {
+    // parsing error -> ignore and fall back
+    console.error('Failed to read generated meal plan from storage', err);
+    return false;
+  }
+}
+
+// Render the generated daily plan across the weekly grid (duplicates daily plan for each day)
+function renderGeneratedWeeklyGrid(plan) {
+  const grid = document.getElementById("weekly-grid");
+  const title = document.getElementById("active-plan-title");
+  title.textContent = "Generated Daily Plan";
+  grid.innerHTML = "";
+
+  // Compute convenient totals for the day if not present
+  const totals = plan.totals || {
+    calories: plan.totals && plan.totals.calories || 0,
+    protein: plan.totals && plan.totals.protein || 0,
+    carbs: plan.totals && plan.totals.carbs || 0,
+    fat: plan.totals && plan.totals.fat || 0
+  };
+
+  // Helper to render list of meal items
+  function renderMealItems(items) {
+    if (!items || items.length === 0) return `<p class="no-items">None</p>`;
+    return items.map(it => {
+      const protein = typeof it.protein !== 'undefined' ? `${it.protein}g P` : '';
+      const carbs = typeof it.carbs !== 'undefined' ? `${it.carbs}g C` : '';
+      const fat = typeof it.fat !== 'undefined' ? `${it.fat}g F` : '';
+      const calories = typeof it.calories !== 'undefined' ? `${it.calories} kcal` : '';
+      return `<div class="generated-item"><strong>${escapeHtml(it.name)}</strong><div class="gen-macros">${calories} ${protein} ${carbs} ${fat}</div></div>`;
+    }).join("");
+  }
+
+  // For each day show the same generated plan
+  DAYS.forEach((day) => {
+    const column = document.createElement("article");
+    column.className = "day-column generated";
+    column.setAttribute("aria-label", `${day} generated meals`);
+
+    // Totals: if plan.totals contains numbers, use them; else compute from items
+    let dayCalories = plan.totals && plan.totals.calories ? plan.totals.calories : 0;
+    let dayProtein = plan.totals && plan.totals.protein ? plan.totals.protein : 0;
+    let dayCarbs = plan.totals && plan.totals.carbs ? plan.totals.carbs : 0;
+    let dayFat = plan.totals && plan.totals.fat ? plan.totals.fat : 0;
+
+    if ((!dayCalories || !dayProtein) && plan.breakfast) {
+      // compute from items as fallback
+      [plan.breakfast, plan.snacks, plan.lunch, plan.dinner].forEach(list => {
+        if (!list) return;
+        list.forEach(it => {
+          dayCalories += Number(it.calories) || 0;
+          dayProtein += Number(it.protein) || 0;
+          dayCarbs += Number(it.carbs) || 0;
+          dayFat += Number(it.fat) || 0;
+        });
+      });
+    }
+
+    const heading = document.createElement("div");
+    heading.className = "day-heading";
+    heading.innerHTML = `<h3>${day}</h3><span class="total-pill">${Math.round(dayCalories)} kcal</span>`;
+
+    const totalRow = document.createElement("div");
+    totalRow.className = "total-row";
+    totalRow.innerHTML = `<span>${Math.round(dayProtein)}g protein</span><span>${Math.round(dayCarbs)}g carbs</span><span>${Math.round(dayFat)}g fat</span>`;
+
+    column.append(heading, totalRow);
+
+    // Breakfast
+    const breakfastBlock = document.createElement("section");
+    breakfastBlock.className = "meal-block";
+    breakfastBlock.innerHTML = `<p class="meal-type">Breakfast</p><h4 class="meal-name">Generated Breakfast</h4><div class="generated-list">${renderMealItems(plan.breakfast)}</div>`;
+    column.appendChild(breakfastBlock);
+
+    // Mid-morning snack: take first snack if present
+    const snackList = plan.snacks || [];
+    const midSnackBlock = document.createElement("section");
+    midSnackBlock.className = "meal-block";
+    midSnackBlock.innerHTML = `<p class="meal-type">Mid-morning snack</p><h4 class="meal-name">Generated Snack</h4><div class="generated-list">${renderMealItems(snackList.length > 0 ? [snackList[0]] : [])}</div>`;
+    column.appendChild(midSnackBlock);
+
+    // Lunch
+    const lunchBlock = document.createElement("section");
+    lunchBlock.className = "meal-block";
+    lunchBlock.innerHTML = `<p class="meal-type">Lunch</p><h4 class="meal-name">Generated Lunch</h4><div class="generated-list">${renderMealItems(plan.lunch)}</div>`;
+    column.appendChild(lunchBlock);
+
+    // Evening snack: second snack if present
+    const eveSnackBlock = document.createElement("section");
+    eveSnackBlock.className = "meal-block";
+    eveSnackBlock.innerHTML = `<p class="meal-type">Evening snack</p><h4 class="meal-name">Generated Snack</h4><div class="generated-list">${renderMealItems(snackList.length > 1 ? [snackList[1]] : [])}</div>`;
+    column.appendChild(eveSnackBlock);
+
+    // Dinner
+    const dinnerBlock = document.createElement("section");
+    dinnerBlock.className = "meal-block";
+    dinnerBlock.innerHTML = `<p class="meal-type">Dinner</p><h4 class="meal-name">Generated Dinner</h4><div class="generated-list">${renderMealItems(plan.dinner)}</div>`;
+    column.appendChild(dinnerBlock);
+
+    grid.appendChild(column);
+  });
+}
+
 function initHydration(profile) {
   const form = document.getElementById("hydration-form");
   const input = document.getElementById("water-input");
@@ -312,8 +435,10 @@ function updateHydrationDisplay(profile) {
 
 function renderGenderSlot(profile) {
   const slot = document.getElementById("gender-calorie-slot");
+  if (!slot) return;
   const status = getGenderCalorieAdjustment(profile);
-  slot.querySelector("strong").textContent = status.label;
+  const strong = slot.querySelector("strong");
+  if (strong) strong.textContent = status.label;
 }
 
 function getGenderCalorieAdjustment() {
@@ -368,4 +493,14 @@ function readJson(key) {
 
 function saveJson(key, value) {
   localStorage.setItem(key, JSON.stringify(value));
+}
+
+// Small helper to escape user-provided meal names in generated plan
+function escapeHtml(s) {
+  if (!s) return "";
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
