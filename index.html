@@ -17,7 +17,6 @@
       <span>TribalStar</span>
     </a>
     <nav class="top-nav" aria-label="Primary navigation">
-      <a href="nutrition-calculator.html">Nutrition Calculator</a>
       <a href="food.html">Dashboard</a>
     </nav>
   </header>
@@ -42,88 +41,143 @@
     <section class="panel profile-panel" aria-labelledby="profile-title">
       <div class="section-heading">
         <p class="eyebrow">Astronaut access</p>
-        <h2 id="profile-title">Crew profile</h2>
+        <h2 id="profile-title">Crew profile & nutrition setup</h2>
       </div>
 
       <form id="profile-form" class="profile-form">
-        <div class="form-grid">
-          <label>
-            <span>Full name</span>
-            <input name="fullName" type="text" autocomplete="name" required>
-          </label>
+        <!-- Basic Crew Information -->
+        <div class="form-section">
+          <fieldset class="form-section">
+            <legend>Basic Information</legend>
+            <div class="form-grid">
+              <label>
+                <span>Full name</span>
+                <input name="fullName" type="text" autocomplete="name" required>
+              </label>
 
-          <label>
-            <span>Gender</span>
-            <select name="gender" required>
-              <option value="">Select</option>
-              <option>Female</option>
-              <option>Male</option>
-              <option>Non-binary</option>
-              <option>Prefer not to say</option>
-            </select>
-          </label>
+              <label>
+                <span>Gender</span>
+                <select name="gender" required>
+                  <option value="">Select</option>
+                  <option>Female</option>
+                  <option>Male</option>
+                  <option>Non-binary</option>
+                  <option>Prefer not to say</option>
+                </select>
+              </label>
 
-          <label>
-            <span>Country</span>
-            <input name="country" type="text" autocomplete="country-name" required>
-          </label>
+              <label>
+                <span>Country</span>
+                <input name="country" type="text" autocomplete="country-name" required>
+              </label>
 
-          <label>
-            <span>Age</span>
-            <input name="age" type="number" min="16" max="90" inputmode="numeric" required>
-          </label>
+              <label>
+                <span>Age</span>
+                <input name="age" type="number" min="16" max="90" inputmode="numeric" required>
+              </label>
 
-          <label>
-            <span>Weight (kg)</span>
-            <input name="weight" type="number" min="30" max="180" step="0.1" inputmode="decimal" required>
-          </label>
+              <label>
+                <span>Weight (kg)</span>
+                <input name="weight" type="number" min="30" max="180" step="0.1" inputmode="decimal" required>
+              </label>
 
-          <label>
-            <span>Height (cm)</span>
-            <input name="height" type="number" min="120" max="230" step="0.1" inputmode="decimal" required>
-          </label>
+              <label>
+                <span>Height (cm)</span>
+                <input name="height" type="number" min="120" max="230" step="0.1" inputmode="decimal" required>
+              </label>
 
-          <label>
-            <span>Mission role</span>
-            <select name="missionRole" required>
-              <option value="">Select</option>
-              <option>Commander</option>
-              <option>Pilot</option>
-              <option>Mission specialist</option>
-              <option>Flight engineer</option>
-              <option>Medical officer</option>
-              <option>Botany specialist</option>
-            </select>
-          </label>
+              <label>
+                <span>Mission role</span>
+                <select name="missionRole" required>
+                  <option value="">Select</option>
+                  <option>Commander</option>
+                  <option>Pilot</option>
+                  <option>Mission specialist</option>
+                  <option>Flight engineer</option>
+                  <option>Medical officer</option>
+                  <option>Botany specialist</option>
+                </select>
+              </label>
 
-          <label>
-            <span>Crew ID</span>
-            <input name="crewId" type="text" autocomplete="off" placeholder="TS-01">
-          </label>
+              <label>
+                <span>Crew ID</span>
+                <input name="crewId" type="text" autocomplete="off" placeholder="TS-01">
+              </label>
 
-          <label>
-            <span>Lunar habitat</span>
-            <input name="habitat" type="text" autocomplete="off" placeholder="Artemis Ridge">
-          </label>
+              <label>
+                <span>Lunar habitat</span>
+                <input name="habitat" type="text" autocomplete="off" placeholder="Artemis Ridge">
+              </label>
 
-          <label>
-            <span>Shift cycle</span>
-            <select name="shiftCycle">
-              <option>Alpha</option>
-              <option>Beta</option>
-              <option>Gamma</option>
-              <option>Delta</option>
-            </select>
-          </label>
+              <label>
+                <span>Shift cycle</span>
+                <select name="shiftCycle">
+                  <option>Alpha</option>
+                  <option>Beta</option>
+                  <option>Gamma</option>
+                  <option>Delta</option>
+                </select>
+              </label>
+            </div>
+          </fieldset>
+        </div>
+
+        <!-- Activity Level & Nutrition Preferences -->
+        <div class="form-section">
+          <fieldset class="form-section">
+            <legend>Activity & Nutrition Profile</legend>
+            <div class="form-grid">
+              <label>
+                <span>Activity level</span>
+                <select name="activityLevel" required>
+                  <option value="">Select</option>
+                  <option value="sedentary">Sedentary (minimal EVA)</option>
+                  <option value="low">Low Activity (routine operations)</option>
+                  <option value="moderate">Moderate (standard missions)</option>
+                  <option value="high">High Activity (EVA missions)</option>
+                  <option value="very-high">Very High (intense EVA)</option>
+                </select>
+              </label>
+
+              <label>
+                <span>Dietary restrictions</span>
+                <select name="dietaryRestrictions">
+                  <option value="">None</option>
+                  <option>Vegetarian</option>
+                  <option>Vegan</option>
+                  <option>Gluten-free</option>
+                  <option>Nut allergies</option>
+                  <option>Other</option>
+                </select>
+              </label>
+
+              <label>
+                <span>Fitness category</span>
+                <select name="fitnessCategory" required>
+                  <option value="">Select</option>
+                  <option value="sedentary">Sedentary</option>
+                  <option value="light">Lightly active</option>
+                  <option value="moderate">Moderately active</option>
+                  <option value="active">Very active</option>
+                  <option value="intense">Extremely active</option>
+                </select>
+              </label>
+
+              <label class="full-width">
+                <span>Special dietary notes</span>
+                <input name="dietaryNotes" type="text" placeholder="e.g., allergies, preferences">
+              </label>
+            </div>
+          </fieldset>
         </div>
 
         <div class="form-actions">
-          <button class="button primary" type="submit">Save profile</button>
-          <a class="button secondary" href="food.html" id="continue-link">Continue</a>
+          <button class="button primary" type="submit">Generate nutrition plan & enter dashboard</button>
+          <a class="button secondary" href="food.html" id="skip-link">Skip to dashboard</a>
         </div>
       </form>
 
-      <p class="saved-state" id="saved-profile-note" hidden>Saved profile ready for dashboard access.</p>
+      <p class="saved-state" id="saved-profile-note" hidden>Profile updated. Your personalized nutrition plan is ready.</p>
     </section>
   </main>
 </body>
