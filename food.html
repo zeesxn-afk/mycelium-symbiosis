@@ -9,7 +9,7 @@
   <script src="script.js" defer></script>
 </head>
 <body data-page="dashboard">
-  <a class="skip-link" href="#weekly-schedule">Skip to schedule</a>
+  <a class="skip-link" href="#day-plan">Skip to day plan</a>
 
   <header class="site-header">
     <a class="brand-mark" href="index.html" aria-label="TribalStar Mycelium Symbiosis home">
@@ -92,15 +92,25 @@
       <div class="info-card-reserve" data-future-module="food-detail-cards"></div>
     </section>
 
-    <section class="schedule-section" id="weekly-schedule" aria-labelledby="schedule-title">
-      <div class="schedule-heading">
+    <!-- Replaced weekly schedule with a single Day Plan view -->
+    <section class="schedule-section dayplan-section" id="day-plan" aria-labelledby="dayplan-title">
+      <div class="dayplan-header">
         <div>
-          <p class="eyebrow">Weekly nutrition</p>
-          <h2 id="schedule-title">Meal schedule</h2>
+          <p class="eyebrow">Daily nutrition</p>
+          <h2 id="dayplan-title">Today’s plan</h2>
+          <p id="day-date" class="microcopy"></p>
         </div>
-        <p id="active-plan-title" class="active-plan-title"></p>
+        <div class="day-summary" aria-hidden="false">
+          <div class="day-total">
+            <div class="day-total-item"><span class="microcopy">Calories</span><strong id="totals-calories">—</strong></div>
+            <div class="day-total-item"><span class="microcopy">Protein</span><strong id="totals-protein">—</strong></div>
+            <div class="day-total-item"><span class="microcopy">Carbs</span><strong id="totals-carbs">—</strong></div>
+          </div>
+          <div class="key-micros" id="key-micros"></div>
+        </div>
       </div>
-      <div class="weekly-grid" id="weekly-grid"></div>
+
+      <div id="day-meals" class="day-meals"></div>
     </section>
   </main>
 </body>
